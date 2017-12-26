@@ -39,7 +39,7 @@ public:
 template <typename T>
 Allocator<T>::Allocator(size_t preallocated_size)
 {
-    MemoryPool::Instance().AddAllocation(preallocated_size);
+    MemoryPool::Instance().AddAlloc(preallocated_size);
 }
 
 template <typename T>
@@ -51,7 +51,7 @@ Allocator<T>::~Allocator()
 template <typename T>
 typename Allocator<T>::pointer Allocator<T>::allocate(size_type n, const void* /*hint*/)
 {
-    return MemoryPool::Instance().GetAllocation(n);
+    return MemoryPool::Instance().GetAlloc(n);
 }
 
 template <typename T>
