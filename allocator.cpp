@@ -38,7 +38,7 @@ static void TestMapWithStandardAllocator()
 
 static void TestMapWithCustomAllocator()
 {
-    using Map = std::map<int, long long, std::less<int>, Allocator<std::pair<const int, long long>, 2>>;
+    using Map = std::map<int, long long, std::less<int>, Allocator<long long>>;
 
     Map map;
 

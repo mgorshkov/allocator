@@ -1,5 +1,5 @@
 #include <cstddef>
-#include <memory>
+#include "memorypool.h"
 
 template<typename T>
 struct AllocatorType
@@ -7,8 +7,7 @@ struct AllocatorType
     typedef T value_type;
 };
 
-
-template <typename T, size_t Size>
+template <typename T>
 class Allocator
 {
 public:
@@ -19,16 +18,16 @@ public:
     typedef const value_type& const_reference;
     typedef size_t size_type;
     typedef ptrdiff_t difference_type;
-    template<typename U, size_t S> struct rebind
+    template<typename U> struct rebind
     {
-        typedef Allocator<U, S> other;
+        typedef Allocator<U> other;
     };
 
-    Allocator();
+    Allocator(size_t preallocated_size = 10);
     ~Allocator();
 
-    T* allocate(std::size_t n, const void * hint);
-    void deallocate( T* p, std::size_t n );
+    pointer allocate(size_type n, const void* /*hint*/ = 0);
+    void deallocate(pointer p, size_type /*n*/);
 
     template<typename U, typename... Args>
     void construct(U* p, Args&&... args);
@@ -37,42 +36,65 @@ public:
     void destroy(U* p);
 };
 
-template <typename T, size_t Size>
-Allocator<T, Size>::Allocator()
+template <typename T>
+Allocator<T>::Allocator(size_t preallocated_size)
+{
+    MemoryPool::Instance().AddAllocation(preallocated_size);
+}
+
+template <typename T>
+Allocator<T>::~Allocator()
 {
 
 }
 
-template <typename T, size_t Size>
-Allocator<T, Size>::~Allocator()
+template <typename T>
+typename Allocator<T>::pointer Allocator<T>::allocate(size_type n, const void* /*hint*/)
 {
-
+    return MemoryPool::Instance().GetAllocation(n);
 }
 
-template <typename T, size_t Size>
-T* Allocator<T, Size>::allocate(std::size_t n, const void * hint)
+template <typename T>
+void Allocator<T>::deallocate(pointer p, size_type)
 {
-    return ::operator new(n);
 }
 
-template <typename T, size_t Size>
-void Allocator<T, Size>::deallocate(T* p, std::size_t)
-{
-    ::operator delete(p);
-}
-
-template <typename T, size_t Size>
+template <typename T>
 template<class U, class... Args>
-void Allocator<T, Size>::construct(U* p, Args&&... args)
+void Allocator<T>::construct(U* p, Args&&... args)
 {
     ::new((void*)p) U(std::forward<Args>(args)...);
 }
 
-template <typename T, size_t Size>
+template <typename T>
 template<class U>
-void Allocator<T, Size>::destroy(U* p)
+void Allocator<T>::destroy(U* p)
 {
     p->~U();
+}
+
+template<>
+class Allocator<void>
+{
+public:
+    typedef void* pointer;
+    typedef const void* const_pointer;
+    typedef void value_type;
+    template<class U> struct rebind {
+        typedef Allocator<U> other;
+    };
+};
+
+template<typename T, typename U>
+inline bool operator==( const Allocator<T>&, const Allocator<U>& )
+{
+    return true;
+}
+
+template<typename T, typename U>
+inline bool operator!=( const Allocator<T>&, const Allocator<U>& )
+{
+    return false;
 }
 
 
