@@ -4,9 +4,9 @@ find_package(Boost COMPONENTS unit_test_framework REQUIRED)
 
 configure_file(version.h.in version.h)
 
-add_executable(allocator allocator.cpp)
-add_executable(allocator_test allocator_test.cpp)
-add_library(allocatorlib allocatorlib.cpp memorypool.cpp)
+add_executable(allocator allocator.cpp slist.cpp)
+add_executable(allocator_test allocator_test.cpp slist.cpp)
+add_library(allocatorlib allocatorlib.cpp)
 
 set_target_properties(allocator allocator_test PROPERTIES
 #	COMPILE_OPTIONS -Wpedantic -Wall -Wextra

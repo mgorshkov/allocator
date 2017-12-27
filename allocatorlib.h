@@ -1,31 +1,39 @@
 #include <cstddef>
+
 #include "memorypool.h"
+#include "singleton.h"
 
 template<typename T>
-struct AllocatorType
+struct ChunkedAllocatorType
 {
     typedef T value_type;
 };
 
-template <typename T>
-class Allocator
+// Meets "allocator" requirements of ISO C++ Standard, Section 20.1.5
+template <typename T, size_t N = DefaultPreallocSize>
+class ChunkedAllocator
 {
 public:
-    typedef typename AllocatorType<T>::value_type value_type;
+    typedef typename ChunkedAllocatorType<T>::value_type value_type;
     typedef value_type* pointer;
     typedef const value_type* const_pointer;
     typedef value_type& reference;
     typedef const value_type& const_reference;
     typedef size_t size_type;
     typedef ptrdiff_t difference_type;
-    template<typename U> struct rebind
+    template<typename U>
+    struct rebind
     {
-        typedef Allocator<U> other;
+        typedef ChunkedAllocator<U, N> other;
     };
 
-    Allocator(size_t preallocated_size = 10);
-    ~Allocator();
+    ChunkedAllocator() = default;
+    ChunkedAllocator(const ChunkedAllocator&) = default;
+    template <typename U, size_t S>
+    ChunkedAllocator(const ChunkedAllocator<U, S>&) {}
+    ~ChunkedAllocator() {}
 
+    ChunkedAllocator& operator = (const ChunkedAllocator& other) = default;
     pointer allocate(size_type n, const void* /*hint*/ = 0);
     void deallocate(pointer p, size_type /*n*/);
 
@@ -36,66 +44,57 @@ public:
     void destroy(U* p);
 };
 
-template <typename T>
-Allocator<T>::Allocator(size_t preallocated_size)
+template <typename T, size_t N>
+typename ChunkedAllocator<T, N>::pointer ChunkedAllocator<T, N>::allocate(size_type n, const void* /*hint*/)
 {
-    MemoryPool::Instance().AddAlloc(preallocated_size);
+    return MemoryPool<T, N>::GetInstance().Alloc(n);
 }
 
-template <typename T>
-Allocator<T>::~Allocator()
+template <typename T, size_t N>
+void ChunkedAllocator<T, N>::deallocate(pointer p, size_type)
 {
-
+    // no deallocate operation by design
 }
 
-template <typename T>
-typename Allocator<T>::pointer Allocator<T>::allocate(size_type n, const void* /*hint*/)
-{
-    return MemoryPool::Instance().GetAlloc(n);
-}
-
-template <typename T>
-void Allocator<T>::deallocate(pointer p, size_type)
-{
-}
-
-template <typename T>
-template<class U, class... Args>
-void Allocator<T>::construct(U* p, Args&&... args)
+template <typename T, size_t N>
+template <typename U, typename... Args>
+void ChunkedAllocator<T, N>::construct(U* p, Args&&... args)
 {
     ::new((void*)p) U(std::forward<Args>(args)...);
 }
 
-template <typename T>
-template<class U>
-void Allocator<T>::destroy(U* p)
+template <typename T, size_t N>
+template <typename U>
+void ChunkedAllocator<T, N>::destroy(U* p)
 {
     p->~U();
 }
 
-template<>
-class Allocator<void>
+// Analogous to std::allocator<void>, as defined in ISO C++ Standard, Section 20.4.1
+template<size_t N>
+class ChunkedAllocator<void, N>
 {
 public:
     typedef void* pointer;
     typedef const void* const_pointer;
     typedef void value_type;
-    template<class U> struct rebind {
-        typedef Allocator<U> other;
+    template<typename U>
+    struct rebind
+    {
+        typedef ChunkedAllocator<U, N> other;
     };
 };
 
-template<typename T, typename U>
-inline bool operator==( const Allocator<T>&, const Allocator<U>& )
+template<typename T, size_t N, typename U, size_t S>
+inline bool operator == (const ChunkedAllocator<T, N>&, const ChunkedAllocator<U, S>&)
 {
     return true;
 }
 
-template<typename T, typename U>
-inline bool operator!=( const Allocator<T>&, const Allocator<U>& )
+template<typename T, size_t N, typename U, size_t S>
+inline bool operator != (const ChunkedAllocator<T, N>&, const ChunkedAllocator<U, S>&)
 {
     return false;
 }
-
 
 int version();

@@ -2,6 +2,7 @@
 #include <iostream>
 
 #include "allocatorlib.h"
+#include "slist.h"
 
 template <typename Map>
 static void PrintMap(const Map& map)
@@ -38,7 +39,7 @@ static void TestMapWithStandardAllocator()
 
 static void TestMapWithCustomAllocator()
 {
-    using Map = std::map<int, long long, std::less<int>, Allocator<long long>>;
+    using Map = std::map<int, long long, std::less<int>, ChunkedAllocator<long long>>;
 
     Map map;
 
@@ -50,6 +51,34 @@ static void TestMapWithCustomAllocator()
     PrintMap(map);
 }
 
+static void TestListWithStandardAllocator()
+{
+    using List = SinglyLinkedList<int>;
+
+    List list;
+
+    for (int i = 0; i < 10; ++i)
+    {
+        list.Add(i);
+    }
+
+    std::cout << list;
+}
+
+static void TestListWithCustomAllocator()
+{
+    using List = SinglyLinkedList<int, ChunkedAllocator<int>>;
+
+    List list;
+
+    for (int i = 0; i < 10; ++i)
+    {
+        list.Add(i);
+    }
+
+    std::cout << list;
+}
+
 int main(int, char const **)
 {
     try
@@ -58,8 +87,11 @@ int main(int, char const **)
 
         TestMapWithCustomAllocator();
 
+        TestListWithStandardAllocator();
+
+        TestListWithCustomAllocator();
     }
-    catch(const std::exception &e)
+    catch (const std::exception &e)
     {
         std::cerr << e.what() << std::endl;
     }
