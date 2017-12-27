@@ -1,7 +1,5 @@
 #pragma once
 
-#include <mutex>
-
 #include <list>
 #include <array>
 
@@ -9,17 +7,13 @@
 
 const constexpr int DefaultPreallocSize = 10;
 
+// does not work in multithreaded environment
 template <typename T, size_t N = DefaultPreallocSize>
 class MemoryPool
 {
 public:
     static MemoryPool& GetInstance()
     {
-        if (instance)
-            return *instance;
-
-        std::unique_lock<std::mutex> lock;
-
         if (instance)
             return *instance;
 
@@ -30,20 +24,18 @@ public:
     T* Alloc(size_t n)
     {
         assert (n <= N && "incorrect allocation size");
-        auto& lastChunk = memoryPool.back();
-        T* lastChunkStart = &lastChunk[0];
-        T* ptr = lastChunkStart + countIssued;
+        T* ptr = GetLastChunkStart() + countIssued;
         if (countIssued + n > N)
         {
             AppendNewChunk();
-            auto& newLastChunk = memoryPool.back();
-            ptr = &newLastChunk[0];
+            ptr = GetLastChunkStart();
         }
         countIssued += n;
         return ptr;
     }
 
 private:
+
     MemoryPool()
         : countIssued(0)
     {
@@ -57,8 +49,14 @@ private:
         countIssued = 0;
     }
 
+    T* GetLastChunkStart()
+    {
+        auto& newLastChunk = memoryPool.back();
+        return &newLastChunk[0];
+    }
 private:
     using Chunk = std::array<T, N>;
+
     std::list<Chunk> memoryPool;
     size_t countIssued;
 

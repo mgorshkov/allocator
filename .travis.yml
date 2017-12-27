@@ -22,4 +22,4 @@ deploy:
   provider: script
   skip_cleanup: true
   script:
-  - curl -T ip_filter-0.0.$TRAVIS_BUILD_NUMBER-Linux.deb -umgorshkov:$BINTRAY_API_KEY "https://api.bintray.com/content/mgorshkov/otus/ip_filter/1/ip_filter-0.0.$TRAVIS_BUILD_NUMBER-Linux.deb;deb_distribution=trusty;deb_component=main;deb_architecture=amd64;publish=1"
+  - curl -T allocator-0.0.$TRAVIS_BUILD_NUMBER-Linux.deb -umgorshkov:$BINTRAY_API_KEY "https://api.bintray.com/content/mgorshkov/otus/allocator/1/allocator-0.0.$TRAVIS_BUILD_NUMBER-Linux.deb;deb_distribution=trusty;deb_component=main;deb_architecture=amd64;publish=1"

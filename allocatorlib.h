@@ -1,7 +1,6 @@
 #include <cstddef>
 
 #include "memorypool.h"
-#include "singleton.h"
 
 template<typename T>
 struct ChunkedAllocatorType

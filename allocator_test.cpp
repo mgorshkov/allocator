@@ -39,7 +39,8 @@ BOOST_AUTO_TEST_CASE(test_custom_list_with_allocator)
     int i = 0;
     while (!it.IsEnd())
     {
-        BOOST_CHECK_EQUAL(it->data, i++);
+        BOOST_CHECK_EQUAL(it->data, i);
+        ++i;
         ++it;
     }
 }
