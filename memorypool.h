@@ -7,6 +7,8 @@
 
 const constexpr int DefaultPreallocSize = 10;
 
+// Memory pool for chunked allocator
+// Allocates memory by N-bytes chunks
 // does not work in multithreaded environment
 template <typename T, size_t N = DefaultPreallocSize>
 class MemoryPool

@@ -8,6 +8,7 @@ struct ChunkedAllocatorType
     typedef T value_type;
 };
 
+// Allocates memory by N-byte chunks
 // Meets "allocator" requirements of ISO C++ Standard, Section 20.1.5
 template <typename T, size_t N = DefaultPreallocSize>
 class ChunkedAllocator

@@ -2,6 +2,8 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <map>
+
 #include "allocatorlib.h"
 #include "slist.h"
 
