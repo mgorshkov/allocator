@@ -51,7 +51,7 @@ static void TestMapWithCustomAllocator()
     PrintMap(map);
 }
 
-static void TestListWithStandardAllocator()
+static void TestCustomListWithStandardAllocator()
 {
     using List = SinglyLinkedList<int>;
 
@@ -65,7 +65,7 @@ static void TestListWithStandardAllocator()
     std::cout << list;
 }
 
-static void TestListWithCustomAllocator()
+static void TestCustomListWithCustomAllocator()
 {
     using List = SinglyLinkedList<int, ChunkedAllocator<int>>;
 
@@ -87,9 +87,9 @@ int main(int, char const **)
 
         TestMapWithCustomAllocator();
 
-        TestListWithStandardAllocator();
+        TestCustomListWithStandardAllocator();
 
-        TestListWithCustomAllocator();
+        TestCustomListWithCustomAllocator();
     }
     catch (const std::exception &e)
     {
