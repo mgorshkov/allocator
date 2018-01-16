@@ -4,6 +4,11 @@ find_package(Boost COMPONENTS unit_test_framework REQUIRED)
 
 configure_file(version.h.in version.h)
 
+if (DEBUG_PRINT)
+    message("DEBUG_PRINT is activated!")
+    add_definitions(-DDEBUG_PRINT)
+endif()
+
 add_executable(allocator allocator.cpp)
 add_executable(allocator_test allocator_test.cpp)
 add_library(allocatorlib allocatorlib.cpp)

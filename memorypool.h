@@ -1,7 +1,8 @@
 #pragma once
 
-#include <list>
 #include <array>
+#include <map>
+#include <iostream>
 
 #include <assert.h>
 
@@ -23,47 +24,85 @@ public:
         return *instance;
     }
 
+    using Chunk = std::array<T, N>;
+
     T* Alloc(size_t n)
     {
-        assert (n <= N && "incorrect allocation size");
-        T* ptr = GetLastChunkStart() + countIssued;
-        if (countIssued + n > N)
+#ifdef DEBUG_PRINT
+        std::cout << "allocate: " << n << std::endl;
+#endif
+        assert (n <= N && "invalid allocation size");
+        for (auto& chunk : memoryPool)
         {
-            AppendNewChunk();
-            ptr = GetLastChunkStart();
+            auto& ar = *chunk.first;
+            if (chunk.second + n <= N)
+            {
+                T* ptr = &ar[0] + chunk.second;
+#ifdef DEBUG_PRINT
+                std::cout << "allocated ready: " << ptr << ", "
+                          << "chunk.first: " << chunk.first << ", "
+                          << "chunk.second: " << chunk.second << std::endl;
+#endif
+                chunk.second += n;
+                return ptr;
+            }
         }
-        countIssued += n;
-        return ptr;
+        return AppendNewChunk(n);
+    }
+
+    void Dealloc(T* p)
+    {
+#ifdef DEBUG_PRINT
+        std::cout << "deallocate: " << p << std::endl;
+#endif
+        auto chunk = std::prev(memoryPool.upper_bound(reinterpret_cast<Chunk*>(p)));
+#ifdef DEBUG_PRINT
+        std::cout << "deallocate, chunk: " << chunk->first << std::endl;
+#endif
+        if (--chunk->second == 0)
+        {
+            delete chunk->first;
+            memoryPool.erase(chunk);
+        }
     }
 
 private:
 
     MemoryPool()
-        : countIssued(0)
     {
-        AppendNewChunk();
     }
 
-    void AppendNewChunk()
+    ~MemoryPool()
     {
-        Chunk newChunk;
-        memoryPool.push_back(newChunk);
-        countIssued = 0;
+        for (auto& chunk : memoryPool)
+        {
+            delete chunk->first;
+        }
     }
 
-    T* GetLastChunkStart()
+    MemoryPool(const MemoryPool&) = delete;
+    MemoryPool(MemoryPool&&) = delete;
+    MemoryPool& operator = (const MemoryPool&) = delete;
+    MemoryPool& operator = (MemoryPool&&) = delete;
+
+    T* AppendNewChunk(size_t n)
     {
-        auto& newLastChunk = memoryPool.back();
-        return &newLastChunk[0];
+        auto newChunk = new Chunk();
+        memoryPool.emplace(std::make_pair(newChunk, n));
+        auto& ar = *newChunk;
+        auto ptr = &ar[0];
+#ifdef DEBUG_PRINT
+        std::cout << "allocated new: " << ptr << std::endl;
+#endif
+        return ptr;
     }
+
 private:
-    using Chunk = std::array<T, N>;
-
-    std::list<Chunk> memoryPool;
-    size_t countIssued;
+    std::map<Chunk*, size_t> memoryPool;  // Chunk -> countIssued, for quick deallocation
 
     static MemoryPool* instance;
 };
 
 template <typename T, size_t N>
 MemoryPool<T, N>* MemoryPool<T, N>::instance = nullptr;
+

@@ -53,7 +53,7 @@ typename ChunkedAllocator<T, N>::pointer ChunkedAllocator<T, N>::allocate(size_t
 template <typename T, size_t N>
 void ChunkedAllocator<T, N>::deallocate(pointer p, size_type)
 {
-    // no deallocate operation by design
+    MemoryPool<T, N>::GetInstance().Dealloc(p);
 }
 
 template <typename T, size_t N>
